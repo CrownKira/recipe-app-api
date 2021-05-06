@@ -32,10 +32,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     """Custom user model that supports using email instead of username"""
 
     email = models.EmailField(max_length=255, unique=True)
+    # name here is not the username
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
     objects = UserManager()
 
+    # every user must have a unique identifier
+    # default to username but in this case
+    # we want email to be the identifier
     USERNAME_FIELD = "email"
