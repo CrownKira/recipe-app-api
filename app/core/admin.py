@@ -46,4 +46,6 @@ class UserAdmin(BaseUserAdmin):
     )
 
 
+# UserAdmin to customize the model
 admin.site.register(models.User, UserAdmin)
+admin.site.register(models.Tag)
