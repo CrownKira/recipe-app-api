@@ -8,6 +8,7 @@ from recipe import serializers
 
 # https://github.com/encode/django-rest-framework/tree/master/rest_framework
 # https://github.com/encode/django-rest-framework/blob/master/rest_framework/mixins.py
+# https://github.com/encode/django-rest-framework/blob/master/rest_framework/serializers.py
 
 
 class BaseRecipeAttrViewSet(
@@ -62,7 +63,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         """Return appropriate serializer class"""
+        # when retreive() is invoked
         if self.action == "retrieve":
             return serializers.RecipeDetailSerializer
 
         return self.serializer_class
+
+    def perform_create(self, serializer):
+        """Create a new recipe"""
+        # perform_create(), is_valid are invoked in create()
+        # save() must be called after is_valid() is called
+        # since it needs access to validated_data
+        # validated_data is only available after
+        # is_valid() is invoked
+        # user=self.request.user will be saved along
+        # with all other validated_data
+        # ie. validated_data = {**self.validated_data, **kwargs}
+        # the extra arg passed in here will not pass thru
+        # serializer validation !!
+        # eg. user=self.request.user
+        # can add any fields here regardless of
+        # what is excluded from the serializer
+        # ie. implementer can update, create using whatever
+        # fields but not the client
+        serializer.save(user=self.request.user)
