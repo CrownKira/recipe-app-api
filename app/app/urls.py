@@ -15,6 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.static import static
+from django.conf import settings
 
 # namespace: used when you want to reverse()
 urlpatterns = [
@@ -22,4 +24,10 @@ urlpatterns = [
     # user.urls == look at user then the urls directory under user
     path("api/user/", include("user.urls")),
     path("api/recipe/", include("recipe.urls")),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# makes media url available in our dev server, so we can test
+# uploading images for our recipe, without having to set up a
+# separate web server for serving these media files
+
+# django doesn't serve media files by default
+# so need to manually add these in the urls.py

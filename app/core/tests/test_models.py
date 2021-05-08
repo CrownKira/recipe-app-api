@@ -1,3 +1,4 @@
+from unittest.mock import patch
 from django.test import TestCase
 
 # user model helper function
@@ -74,3 +75,19 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(str(recipe), recipe.title)
+
+    # mock the uuid function
+    @patch("uuid.uuid4")
+    def test_recipe_file_name_uuid(self, mock_uuid):
+        """Test that image is saved in the correct location"""
+        uuid = "test-uuid"
+        # only mock within this test
+        # uuid must be deterministic so that we can test
+        mock_uuid.return_value = uuid
+        # arg1: instance
+        # arg2: file name (of the original file)
+        # myimage will be replaced by uuid
+        file_path = models.recipe_image_file_path(None, "myimage.jpg")
+
+        exp_path = f"uploads/recipe/{uuid}.jpg"
+        self.assertEqual(file_path, exp_path)

@@ -126,5 +126,18 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = "/static/"
+MEDIA_URL = "/media/"
+
+# where to store the media
+MEDIA_ROOT = "/vol/web/media"
+# collectstatic: collect all static files from any
+# dependencies that we have and combine them all
+# and store them in the static root
+# pull all css and js from DRF, django admin, etc
+STATIC_ROOT = "/vol/web/static"
+
+# everything in /static/ will map the static directory, and so on
+# 127.0.0.1:8000/static/
+# 127.0.0.1:8000/media/
 
 AUTH_USER_MODEL = "core.User"

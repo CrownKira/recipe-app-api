@@ -122,7 +122,7 @@ class RecipeDetailSerializer(RecipeSerializer):
     # By default nested serializers are read-only.
     # If you want to support write-operations to a nested serializer
     # field you'll need to create create() and/or update() methods
-    # in order to explicitly specify how the child 
+    # in order to explicitly specify how the child
     # relationships should be saved:
     ingredients = IngredientSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
