@@ -27,7 +27,27 @@ class BaseRecipeAttrViewSet(
     def get_queryset(self):
         """Return objects for the current authenticated user only"""
         # whatever we return here will be displayed in django api
-        return self.queryset.filter(user=self.request.user).order_by("-name")
+        assigned_only = bool(
+            int(self.request.query_params.get("assigned_only", 0))
+        )
+        queryset = self.queryset
+        if assigned_only:
+            # filter out those where recipe cannot be null
+            # queryset = queryset.filter(recipe__isnull=False)
+            # will return duplicate items, duplicate recipes
+            # one tag/ingredient can have many recipes
+            # will return duplicate tags if
+            # (a tag is assigned more than one recipe)
+            # TODO: why recipe not recipes ?
+            # reverse m2m queries:
+            # https://docs.djangoproject.com/en/3.2/topics/db/examples/many_to_many/
+            queryset = queryset.filter(recipe__isnull=False)
+            # distinct(): make sure the queryset returned is unique
+        return (
+            queryset.filter(user=self.request.user)
+            .order_by("-name")
+            .distinct()
+        )
 
     def perform_create(self, serializer):
         """Create a new tag"""
