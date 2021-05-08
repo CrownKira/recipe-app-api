@@ -58,10 +58,40 @@ class RecipeViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    # private function, by convention prepend _
+    # qs: query string
+    def _params_to_ints(self, qs):
+        """Convert a list of string IDs to a list of integers"""
+        # list of strings split up by the comma
+        # our_string = '1,2,3'
+        # our_string_list = ['1', '2', '3']
+        # for each item in the returned list, do the left
+        # similar to map
+        return [int(str_id) for str_id in qs.split(",")]
+
+    # all functions in python are public
     def get_queryset(self):
         # used for list()
         """Retrieve the recipes for the authenticated user"""
-        return self.queryset.filter(user=self.request.user)
+        # http://localhost:8000/api/recipe/recipes/?ingredients=1
+        tags = self.request.query_params.get("tags")
+        ingredients = self.request.query_params.get("ingredients")
+        queryset = self.queryset
+        if tags:
+            tag_ids = self._params_to_ints(tags)
+            # __ (double underscore): filter on foreign key objects
+            # tag > id
+            # __in return all the tags where the id is in the tag_ids list
+            queryset = queryset.filter(tags__id__in=tag_ids)
+
+        if ingredients:
+            # Field lookups
+            # https://docs.djangoproject.com/en/3.2/ref/models
+            # /querysets/#std:fieldlookup-exact
+            ingredient_ids = self._params_to_ints(ingredients)
+            queryset = queryset.filter(ingredients__id__in=ingredient_ids)
+
+        return queryset.filter(user=self.request.user)
 
     def get_serializer_class(self):
         """Return appropriate serializer class"""
