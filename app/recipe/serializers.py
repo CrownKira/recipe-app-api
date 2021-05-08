@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from core.models import Tag, Ingredient, Recipe
 
-# serialize:
+# serialize: (TM)
 # - translates model into querydict (json representation)
 # (ie. validated_data, exposed_data fields),
 # - merges querydict back into model (ie. create, update)
@@ -126,3 +126,12 @@ class RecipeDetailSerializer(RecipeSerializer):
     # relationships should be saved:
     ingredients = IngredientSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
+
+
+class RecipeImageSerializer(serializers.ModelSerializer):
+    """Serializer for uploading images to the recipes"""
+
+    class Meta:
+        model = Recipe
+        fields = ("id", "image")
+        read_only_fields = ("id",)

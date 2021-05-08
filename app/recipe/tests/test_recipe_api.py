@@ -1,3 +1,12 @@
+# comes with python, allows you to generate temporary file
+import tempfile
+
+# create file name, check if file exists, etc
+import os
+
+# PIL: pillow requirement
+from PIL import Image
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -11,6 +20,11 @@ from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 
 
 RECIPES_URL = reverse("recipe:recipe-list")
+
+
+def image_upload_url(recipe_id):
+    """Return URL for recipe image upload"""
+    return reverse("recipe:recipe-upload-image", args=[recipe_id])
 
 
 def detail_url(recipe_id):
@@ -204,3 +218,54 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(recipe.price, payload["price"])
         tags = recipe.tags.all()
         self.assertEqual(len(tags), 0)
+
+
+# add a new test class
+# there is some common functionalities in the class
+# that we need to repeat
+class RecipeImageUploadTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            "user@londonappdev.com", "testpass"
+        )
+        self.client.force_authenticate(self.user)
+        self.recipe = sample_recipe(user=self.user)
+
+    def tearDown(self):
+        # will delete the image that exists in the recipe
+        self.recipe.image.delete()
+
+    def test_upload_image_to_recipe(self):
+        """Test uploading an email to recipe"""
+        url = image_upload_url(self.recipe.id)
+        # create a temp file in the system that we can write to
+        # file removed after exist the block
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as ntf:
+            # creates a black square
+            img = Image.new("RGB", (10, 10))
+            # save to ntf temp file
+            # save as JPEG (format)
+            img.save(ntf, format="JPEG")
+
+            # the way that python reads file
+            # after save, seeking will be done to the end of the file
+            # when try to access it, it will be blank cos alr read up
+            # til the end of the file
+            # seek(0) sets to the beginning of the file
+            ntf.seek(0)
+            # pass in post data as dict
+            # multipart: form that consists of json object
+            res = self.client.post(url, {"image": ntf}, format="multipart")
+        self.recipe.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn("image", res.data)
+        self.assertTrue(os.path.exists(self.recipe.image.path))
+
+    def test_upload_image_bad_request(self):
+        """Test uploading an invalid image"""
+        # http://localhost:8000/api/recipe/recipes/1/upload-image
+        url = image_upload_url(self.recipe.id)
+        res = self.client.post(url, {"image": "notimage"}, format="multipart")
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
